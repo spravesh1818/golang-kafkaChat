@@ -34,7 +34,8 @@ func printMessage(m chatapp.Message) {
 	case m.Username == user:
 		return
 	case m.Username == chatapp.SystemID:
-		fmt.Println(m.Message)
+		messageColor := color.New(color.FgGreen, color.Bold)
+		messageColor.Println(m.Message)
 	default:
 		fmt.Printf("%s: %s", m.Username, m.Message)
 	}
