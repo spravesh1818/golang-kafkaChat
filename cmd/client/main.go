@@ -18,6 +18,7 @@ import (
 
 	medium "golang_kafka_chat_application/pkg/medium"
 
+	"github.com/fatih/color"
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -81,19 +82,19 @@ func main() {
 		topic   = os.Getenv("KAFKA_TOPIC")
 	)
 
-	fmt.Println("What do you want to be called while using the app?")
+	messageColor := color.New(color.FgCyan)
+
+	messageColor.Println("What do you want to be called while using the app?")
 	_, _ = fmt.Scanf("%s\n", &user)
 
 	if err := joinRoom(host); err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Joined Room Successfully")
+	messageColor.Println("Joined Room Successfully.Type your message on the empty prompt to continue")
 	go func() {
 		for {
 			reader := bufio.NewReader(os.Stdin)
-
-			// Print the prompt message to the console
 
 			msg, _ := reader.ReadString('\n')
 			if err := publishMessage(host, msg); err != nil {
@@ -106,19 +107,11 @@ func main() {
 	chErr := make(chan error)
 	consumer := medium.NewConsumer(strings.Split(brokers, ","), topic)
 
-	// Create a buffered channel with a buffer size of 1 for handling signals
-	quit := make(chan os.Signal, 1)
-
-	// Notify the quit channel for SIGINT and SIGTERM signals
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
-	// Your goroutine for consuming messages
 	go func() {
 		consumer.Read(context.Background(), chMsg, chErr)
 	}()
-
-	// Wait for a signal
-	<-quit
+	quit := make(chan os.Signal)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
 	for {
 		select {
